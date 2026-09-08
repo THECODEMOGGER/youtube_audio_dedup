@@ -11,6 +11,7 @@ from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
 
+from bootstrap import locate_executable
 from config import (
     DOWNLOAD_FOLDER, MAX_CONCURRENT_DOWNLOADS,
     DOWNLOAD_TIMEOUT, RETRY_ATTEMPTS, AUDIO_FORMAT, AUDIO_BITRATE
@@ -45,14 +46,14 @@ class YouTubeDownloader:
 
     def _ensure_ffmpeg_available(self):
         """Validate that FFmpeg and FFprobe are available and return their paths."""
-        ffmpeg_path = shutil.which('ffmpeg') or self._find_executable_in_common_locations('ffmpeg')
-        ffprobe_path = shutil.which('ffprobe') or self._find_executable_in_common_locations('ffprobe')
+        ffmpeg_path = locate_executable('ffmpeg') or shutil.which('ffmpeg') or self._find_executable_in_common_locations('ffmpeg')
+        ffprobe_path = locate_executable('ffprobe') or shutil.which('ffprobe') or self._find_executable_in_common_locations('ffprobe')
 
         if not ffmpeg_path or not ffprobe_path:
             raise RuntimeError(
-                "FFmpeg/FFprobe not found. Install FFmpeg and ensure ffmpeg and ffprobe are on PATH. "
-                "Windows: choco install ffmpeg or install from https://www.ffmpeg.org/download.html; "
-                "macOS: brew install ffmpeg; Linux: sudo apt-get install ffmpeg"
+                "FFmpeg/FFprobe not found. The bootstrapper will try to install them on first run. "
+                "If this issue persists, install FFmpeg from https://www.ffmpeg.org/download.html and ensure "
+                "ffmpeg and ffprobe are available on PATH."
             )
 
         return ffmpeg_path, ffprobe_path

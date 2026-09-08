@@ -5,6 +5,10 @@ Main entry point for the YouTube Audio Deduplication System.
 import sys
 from pathlib import Path
 
+from bootstrap import ensure_runtime_environment
+
+ensure_runtime_environment()
+
 from utils import setup_logging, validate_keyword_input, validate_integer_input
 from downloader import YouTubeDownloader
 from filter import VideoFilter, print_video_list

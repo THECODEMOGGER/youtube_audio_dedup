@@ -7,7 +7,9 @@ import hashlib
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 import logging
+import os
 
+from bootstrap import locate_executable
 from config import FINGERPRINT_MIN_DURATION, ACOUSTID_API_KEY
 from utils import setup_logging
 from database import FingerprintDatabase
@@ -84,8 +86,9 @@ class AudioFingerprinter:
             # Fallback: use ffprobe
             try:
                 import subprocess
+                ffprobe_cmd = locate_executable('ffprobe') or 'ffprobe'
                 result = subprocess.run(
-                    ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', 
+                    [ffprobe_cmd, '-v', 'error', '-show_entries', 'format=duration', 
                      '-of', 'default=noprint_wrappers=1:nokey=1:noprint_sections=1', 
                      str(file_path)],
                     capture_output=True,
@@ -133,8 +136,9 @@ class AudioFingerprinter:
             try:
                 # This requires fpcalc (Chromaprint tool)
                 import subprocess
+                fpcalc_cmd = locate_executable('fpcalc') or 'fpcalc'
                 result = subprocess.run(
-                    ['fpcalc', '-json', str(file_path)],
+                    [fpcalc_cmd, '-json', str(file_path)],
                     capture_output=True,
                     text=True,
                     timeout=60

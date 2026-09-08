@@ -1,28 +1,7 @@
-# YouTube Audio Deduplication System - Dependencies
+# Python runtime dependencies for the project.
+# FFmpeg and fpcalc are handled separately by bootstrap.py as local project tools.
 
-# Core Dependencies
-yt-dlp>=2023.0.0          # YouTube downloader and extractor
-
-# Audio Fingerprinting
-pyacoustid>=1.2.0         # Audio fingerprinting using AcoustID
-librosa>=0.10.0           # Audio analysis library for duration detection
-
-# Optional but Recommended
-mutagen>=1.46.0           # Audio metadata handling (useful for MP3 tags)
-
-# The system also requires:
-# - FFmpeg: https://ffmpeg.org/download.html
-# - Chromaprint: https://acoustid.org/chromaprint
-
-# Install all:
-# pip install -r requirements.txt
-
-# FFmpeg Installation:
-# Windows: choco install ffmpeg
-# macOS: brew install ffmpeg
-# Linux: sudo apt-get install ffmpeg
-
-# Chromaprint Installation:
-# Windows: choco install chromaprint
-# macOS: brew install chromaprint
-# Linux: sudo apt-get install chromaprint-tools
+yt-dlp>=2024.0.0
+pyacoustid>=1.2.0
+librosa>=0.10.0
+mutagen>=1.46.0

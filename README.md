@@ -56,65 +56,58 @@ project/
 
 ## Installation
 
-### Prerequisites
-- Python 3.8+
-- FFmpeg installed and in PATH
-- (Optional) Chromaprint tools for audio fingerprinting
+### Basic setup
 
-### Step 1: Install Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Or install manually:
+1. Install Python 3.9 or newer.
+2. Download or clone the project.
+3. Run:
 
 ```bash
-pip install yt-dlp          # YouTube downloader
-pip install pyacoustid      # Audio fingerprinting
-pip install librosa         # Audio analysis (optional, for duration detection)
+python main.py
 ```
 
-### Step 2: Install FFmpeg
+On first launch, the app automatically checks the current Python environment, installs missing Python packages from `requirements.txt`, downloads local FFmpeg/FFprobe binaries if needed, and downloads a local `fpcalc` copy when the project requires it.
 
-**Windows (using Chocolatey):**
-```bash
-choco install ffmpeg
-```
+> An internet connection is required for the first-time automatic setup.
 
-**Windows (using pip):**
-```bash
-pip install ffmpeg-python
-```
+### What the bootstrapper installs
 
-**macOS:**
-```bash
-brew install ffmpeg
-```
+- Python runtime packages from `requirements.txt`
+- Local FFmpeg and FFprobe binaries inside the project under `tools/ffmpeg/`
+- Local Chromaprint `fpcalc` if it is needed for audio fingerprinting, stored under `tools/chromaprint/`
 
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt-get install ffmpeg
-```
+The bootstrapper prepends the local tool directory to `PATH` so the application can use the downloaded binaries without requiring a system-wide installation.
 
-### Step 3: Install Chromaprint (Optional but Recommended)
+### Manual configuration (optional)
 
-**Windows:**
-```bash
-choco install chromaprint
-```
+If you want to use an AcoustID API key for global duplicate detection:
 
-**macOS:**
-```bash
-brew install chromaprint
-```
+1. Register at https://acoustid.org/api
+2. Get your API key
+3. Edit `config.py` and set:
+   ```python
+   ACOUSTID_API_KEY = "your_api_key_here"
+   ```
 
-**Linux (Ubuntu/Debian):**
-```bash
-sudo apt-get install chromaprint-tools
-```
+### Dependencies handled automatically
 
-### Step 4: Configure AcoustID API (Optional)
+- `yt-dlp` via `python -m pip install`
+- `pyacoustid` via `python -m pip install`
+- `librosa` via `python -m pip install`
+- `mutagen` via `python -m pip install`
+- `ffmpeg` / `ffprobe` via official upstream builds downloaded into the project
+- `fpcalc` via local Chromaprint download when required
+
+### If setup fails
+
+The app will show a clear error instead of a traceback when:
+
+- Python is too old
+- a package cannot be installed because there is no internet connection
+- FFmpeg or `fpcalc` cannot be downloaded or extracted
+- the platform is unsupported
+
+After fixing the issue, run `python main.py` again.
 
 To use global duplicate detection via AcoustID:
 
