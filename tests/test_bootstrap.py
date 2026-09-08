@@ -19,9 +19,18 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn('macosarm64', select_ffmpeg_asset_name('Darwin', 'arm64').lower())
 
     def test_chromaprint_asset_lookup_for_supported_platforms(self):
-        self.assertIn('windows', select_chromaprint_asset_name('Windows', 'x86_64').lower())
-        self.assertIn('linux', select_chromaprint_asset_name('Linux', 'x86_64').lower())
-        self.assertIn('macos', select_chromaprint_asset_name('Darwin', 'arm64').lower())
+        self.assertEqual(
+            select_chromaprint_asset_name('Windows', 'x86_64'),
+            'chromaprint-fpcalc-1.5.1-windows-x86_64.zip',
+        )
+        self.assertEqual(
+            select_chromaprint_asset_name('Linux', 'x86_64'),
+            'chromaprint-fpcalc-1.5.1-linux-x86_64.tar.gz',
+        )
+        self.assertEqual(
+            select_chromaprint_asset_name('Darwin', 'arm64'),
+            'chromaprint-fpcalc-1.5.1-macos-arm64.tar.gz',
+        )
 
 
 if __name__ == '__main__':

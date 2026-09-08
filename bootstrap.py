@@ -11,6 +11,7 @@ import socket
 import subprocess
 import sys
 import tarfile
+import urllib.error
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -192,13 +193,13 @@ def select_chromaprint_asset_name(os_name: str, machine: str) -> str:
     os_name = (os_name or "").lower()
 
     if os_name.startswith("win") and normalized_machine == "x86_64":
-        return "chromaprint-1.5.1-windows-x64.zip"
+        return "chromaprint-fpcalc-1.5.1-windows-x86_64.zip"
     if os_name.startswith("linux") and normalized_machine == "x86_64":
-        return "chromaprint-1.5.1-linux-x86_64.tar.gz"
+        return "chromaprint-fpcalc-1.5.1-linux-x86_64.tar.gz"
     if os_name == "darwin" and normalized_machine == "x86_64":
-        return "chromaprint-1.5.1-macos-x86_64.tar.gz"
+        return "chromaprint-fpcalc-1.5.1-macos-x86_64.tar.gz"
     if os_name == "darwin" and normalized_machine == "arm64":
-        return "chromaprint-1.5.1-macos-arm64.tar.gz"
+        return "chromaprint-fpcalc-1.5.1-macos-arm64.tar.gz"
     raise RuntimeError(
         f"Unsupported platform for automatic Chromaprint download: {os_name} {machine}."
     )
@@ -250,7 +251,19 @@ def locate_executable(executable_name: str, extra_roots: Optional[Iterable[Path]
 
 def _download(url: str, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
-    urllib.request.urlretrieve(url, destination)
+    try:
+        with urllib.request.urlopen(url, timeout=60) as response, destination.open("wb") as output:
+            shutil.copyfileobj(response, output)
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError) as exc:
+        destination.unlink(missing_ok=True)
+        if isinstance(exc, urllib.error.HTTPError):
+            reason = f"HTTP {exc.code}"
+        else:
+            reason = str(exc)
+        raise RuntimeError(
+            f"Could not download Chromaprint/fpcalc from {url} ({reason}). "
+            "Please check your internet connection or install fpcalc manually and add it to PATH."
+        ) from exc
 
 
 def _extract_archive(archive_path: Path, target_dir: Path) -> None:
@@ -289,6 +302,19 @@ def _find_executable_inside_tree(root: Path, executable_name: str) -> Optional[P
         if found.is_file():
             return found
     return None
+
+
+def _is_usable_executable(executable_path: str) -> bool:
+    try:
+        result = subprocess.run(
+            [executable_path, "-version"],
+            check=False,
+            capture_output=True,
+            timeout=15,
+        )
+        return result.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def ensure_ffmpeg_available() -> Tuple[str, str]:
@@ -344,8 +370,11 @@ def ensure_ffmpeg_available() -> Tuple[str, str]:
 
 def ensure_chromaprint_available() -> Optional[str]:
     fpcalc_path = locate_executable("fpcalc", [CHROMAPRINT_TOOLS_DIR, TOOLS_DIR])
-    if fpcalc_path:
+    if fpcalc_path and _is_usable_executable(fpcalc_path):
         return fpcalc_path
+
+    if fpcalc_path:
+        print_status("[WARN]", f"Found unusable fpcalc at {fpcalc_path}; downloading a fresh copy.")
 
     if not has_internet():
         print_status("[WARN]", "Chromaprint/fpcalc is missing and no internet connection is available; fingerprinting may be unavailable.")
@@ -364,7 +393,12 @@ def ensure_chromaprint_available() -> Optional[str]:
     extract_root = TOOLS_DIR / "chromaprint_download"
 
     print_status("[SETUP]", "Chromaprint/fpcalc not found. Downloading a local copy...")
-    _download(archive_url, archive_path)
+    try:
+        _download(archive_url, archive_path)
+    except RuntimeError as exc:
+        raise RuntimeError(
+            f"Chromaprint setup failed: {exc}"
+        ) from exc
     if extract_root.exists():
         shutil.rmtree(extract_root)
     _extract_archive(archive_path, extract_root)
@@ -376,8 +410,15 @@ def ensure_chromaprint_available() -> Optional[str]:
 
     final_dir = CHROMAPRINT_TOOLS_DIR
     final_dir.mkdir(parents=True, exist_ok=True)
-    fpcalc_dest = _copy_executable(fpcalc_source, final_dir / fpcalc_source.name)
+    executable_name = "fpcalc.exe" if os.name == "nt" else "fpcalc"
+    fpcalc_dest = _copy_executable(fpcalc_source, final_dir / executable_name)
     set_local_tool_path(final_dir)
+
+    if not _is_usable_executable(str(fpcalc_dest)):
+        raise RuntimeError(
+            f"Chromaprint was extracted to {fpcalc_dest}, but the executable could not be started."
+        )
+
     print_status("[OK]", f"Chromaprint installed locally at {final_dir}")
     return str(fpcalc_dest)
 
