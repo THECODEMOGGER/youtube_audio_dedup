@@ -111,7 +111,7 @@ After fixing the issue, run `python main.py` again.
 
 To use global duplicate detection via AcoustID:
 
-1. Register at https://acoustid.org/api
+1. Register at https://acoustid.org/api-key
 2. Get your API key
 3. Edit `config.py` and set:
    ```python
