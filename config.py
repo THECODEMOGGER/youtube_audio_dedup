@@ -18,7 +18,7 @@ DOWNLOAD_FOLDER.mkdir(exist_ok=True)
 LOGS_FOLDER.mkdir(exist_ok=True)
 
 # API Configuration
-ACOUSTID_API_KEY = "YOUR_ACOUSTID_API_KEY_HERE"  # Register at https://acoustid.org/api
+ACOUSTID_API_KEY = "YOUR_ACOUSTID_API_KEY_HERE"  # Register at https://acoustid.org/api-key
 
 # Limits and Thresholds
 MAX_SEARCH_LIMIT = 200  # Hard cap for safety
